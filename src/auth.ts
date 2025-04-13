@@ -1,4 +1,4 @@
-import NextAuth from 'next-auth';
+import NextAuth, { CredentialsSignin } from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
 import bcrypt from 'bcryptjs';
 import { findUser } from './actions/usuarioService';
@@ -20,25 +20,22 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 senha: {},
             },
             authorize: async (credentials) => {
-                if (!credentials) return null;
+                if (!credentials) throw new CredentialsSignin('Credenciais inválidas');
 
-                try {
-                    const { email, senha } = usuarioSchema.parse(credentials);
+                const { email, senha } = usuarioSchema.parse(credentials);
 
-                    const usuario = await findUser(email);
+                const usuario = await findUser(email);
 
-                    if (!usuario) return null;
+                if (!usuario) throw new CredentialsSignin('Credenciais inválidas');
 
-                    if (!(await bcrypt.compare(senha, usuario.senha))) return null;
+                if (!(await bcrypt.compare(senha, usuario.senha)))
+                    throw new CredentialsSignin('Credenciais inválidas');
 
-                    return {
-                        id: usuario.id.toString(),
-                        email: usuario.email,
-                        name: usuario.nome,
-                    };
-                } catch (_e: unknown) {
-                    return null;
-                }
+                return {
+                    id: usuario.id.toString(),
+                    email: usuario.email,
+                    name: usuario.nome,
+                };
             },
         }),
     ],

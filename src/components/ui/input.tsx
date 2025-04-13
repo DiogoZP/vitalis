@@ -1,21 +1,60 @@
-import * as React from "react"
+"use client";
+import * as React from "react";
+import { cn } from "@/lib/utils";
+import { EyeIcon, EyeOffIcon } from "lucide-react";
+import { IconType } from "react-icons";
 
-import { cn } from "@/lib/utils"
-
-function Input({ className, type, ...props }: React.ComponentProps<"input">) {
-  return (
-    <input
-      type={type}
-      data-slot="input"
-      className={cn(
-        "border-input file:text-foregroun selection:bg-primary selection:text-primary-foreground flex h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
-        "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]",
-        "aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
-        className
-      )}
-      {...props}
-    />
-  )
+export interface InputProps
+  extends React.InputHTMLAttributes<HTMLInputElement> {
+  Icon?: IconType;
 }
 
-export { Input }
+const Input = React.forwardRef<HTMLInputElement, InputProps>(
+  ({ Icon, className, type, ...props }, ref) => {
+    const [showPassword, setShowPassword] = React.useState(false);
+
+    const togglePasswordVisibility = () => setShowPassword(!showPassword);
+
+    const inputClasses = cn(
+      "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-gray-600 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50",
+      Icon && "pl-10",
+      className
+    );
+
+    return (
+      <div className={cn("relative", className)}>
+        {Icon && (
+          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+            <Icon />
+          </div>
+        )}
+        <input
+          type={type === "password" && showPassword ? "text" : type}
+          className={inputClasses}
+          ref={ref}
+          {...props}
+        />
+        {type === "password" && (
+          <div className="absolute right-0 flex items-center pr-3 -translate-y-1/2 top-1/2 gap-x-1">
+            {showPassword ? (
+              <EyeOffIcon
+                className="cursor-pointer"
+                onClick={togglePasswordVisibility}
+                size={20}
+              />
+            ) : (
+              <EyeIcon
+                className="cursor-pointer"
+                onClick={togglePasswordVisibility}
+                size={20}
+              />
+            )}
+          </div>
+        )}
+      </div>
+    );
+  }
+);
+Input.displayName = "Input";
+
+export { Input };
