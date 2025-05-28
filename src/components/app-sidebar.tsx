@@ -1,8 +1,4 @@
-'use client';
-
 import * as React from 'react';
-import { UserRoundPlus, BriefcaseMedicalIcon, SquareUser, Calendar, Gauge } from 'lucide-react';
-
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import {
@@ -13,42 +9,10 @@ import {
     SidebarRail,
 } from '@/components/ui/sidebar';
 import Image from 'next/image';
+import { auth } from '@/auth';
 
-const data = {
-    usuario: {
-        nome: 'shadcn',
-        email: 'm@example.com',
-    },
-    navMain: [
-        {
-            title: 'Dashboard',
-            url: '/',
-            icon: Gauge,
-        },
-        {
-            title: 'Pacientes',
-            url: '/pacientes',
-            icon: UserRoundPlus,
-        },
-        {
-            title: 'Médicos',
-            url: '/medicos',
-            icon: BriefcaseMedicalIcon,
-        },
-        {
-            title: 'Agendamentos',
-            url: '/agendamentos',
-            icon: Calendar,
-        },
-        {
-            title: 'Usuários',
-            url: '/usuarios',
-            icon: SquareUser,
-        },
-    ],
-};
-
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+export async function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+    const session = await auth();
     return (
         <Sidebar collapsible="icon" {...props}>
             <SidebarHeader className="flex justify-center items-center">
@@ -57,21 +21,22 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     alt="logo"
                     width={300}
                     height={300}
+                    priority
                     className="w-[50%] mt-2 group-data-[collapsible=icon]:hidden"
                 />
                 <Image
                     src="/assets/icons/logo-icon.svg"
                     alt="logo"
-                    width={300}
-                    height={300}
+                    width={150}
+                    height={150}
                     className="w-4 hidden group-data-[collapsible=icon]:block"
                 />
             </SidebarHeader>
             <SidebarContent>
-                <NavMain items={data.navMain} />
+                <NavMain />
             </SidebarContent>
             <SidebarFooter>
-                <NavUser usuario={data.usuario} />
+                <NavUser usuario={session?.user ?? {}} />
             </SidebarFooter>
             <SidebarRail />
         </Sidebar>

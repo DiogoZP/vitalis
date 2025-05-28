@@ -1,7 +1,15 @@
 'use client';
 
-import { ChevronRight, type LucideIcon } from 'lucide-react';
-
+import { usePathname } from 'next/navigation';
+import {
+    UserRoundPlus,
+    BriefcaseMedicalIcon,
+    SquareUser,
+    Calendar,
+    Gauge,
+    ChevronRight,
+    LucideIcon,
+} from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
     SidebarGroup,
@@ -12,21 +20,51 @@ import {
     SidebarMenuSubButton,
     SidebarMenuSubItem,
 } from '@/components/ui/sidebar';
+import Link from 'next/link';
 
-export function NavMain({
-    items,
-}: {
-    items: {
+type Item = {
+    title: string;
+    url: string;
+    icon?: LucideIcon;
+    isActive?: boolean;
+    items?: {
         title: string;
         url: string;
-        icon?: LucideIcon;
-        isActive?: boolean;
-        items?: {
-            title: string;
-            url: string;
-        }[];
     }[];
-}) {
+};
+
+const items: Item[] = [
+    {
+        title: 'Dashboard',
+        url: '/',
+        icon: Gauge,
+    },
+    {
+        title: 'Pacientes',
+        url: '/pacientes',
+        icon: UserRoundPlus,
+    },
+    {
+        title: 'Médicos',
+        url: '/medicos',
+        icon: BriefcaseMedicalIcon,
+    },
+    {
+        title: 'Agendamentos',
+        url: '/agendamentos',
+        icon: Calendar,
+    },
+    {
+        title: 'Usuários',
+        url: '/usuarios',
+        icon: SquareUser,
+    },
+];
+
+export function NavMain() {
+    const pathname = usePathname();
+    const isActive = (href: string) => href == `/${pathname.split('/')[1]}`;
+
     return (
         <SidebarGroup>
             <SidebarMenu>
@@ -42,7 +80,7 @@ export function NavMain({
                                 <CollapsibleTrigger asChild>
                                     <SidebarMenuButton tooltip={item.title}>
                                         {item.icon && <item.icon />}
-                                        <span>{item.title}</span>
+                                        {item.title}
                                         <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                                     </SidebarMenuButton>
                                 </CollapsibleTrigger>
@@ -50,10 +88,13 @@ export function NavMain({
                                     <SidebarMenuSub>
                                         {item.items?.map((subItem) => (
                                             <SidebarMenuSubItem key={subItem.title}>
-                                                <SidebarMenuSubButton asChild>
-                                                    <a href={subItem.url}>
-                                                        <span>{subItem.title}</span>
-                                                    </a>
+                                                <SidebarMenuSubButton
+                                                    asChild
+                                                    className={
+                                                        isActive(subItem.url) ? 'bg-primary' : ''
+                                                    }
+                                                >
+                                                    <Link href={subItem.url}>{subItem.title}</Link>
                                                 </SidebarMenuSubButton>
                                             </SidebarMenuSubItem>
                                         ))}
@@ -63,11 +104,15 @@ export function NavMain({
                         </Collapsible>
                     ) : (
                         <SidebarMenuItem key={item.title}>
-                            <SidebarMenuButton tooltip={item.title}>
-                                {item.icon && <item.icon />}
-                                <a href={item.url} className='w-full h-full flex items-center'>
-                                    <span>{item.title}</span>
-                                </a>
+                            <SidebarMenuButton
+                                asChild
+                                tooltip={item.title}
+                                className={isActive(item.url) ? 'bg-primary' : ''}
+                            >
+                                <Link href={item.url}>
+                                    {item.icon && <item.icon />}
+                                    {item.title}
+                                </Link>
                             </SidebarMenuButton>
                         </SidebarMenuItem>
                     ),

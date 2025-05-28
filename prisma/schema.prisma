@@ -1,13 +1,10 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "sqlite"
-  url      = env("DATABASE_URL")
+  url      = "file:./dev.db"
 }
 
 model Usuario {
@@ -15,7 +12,6 @@ model Usuario {
   email   String  @unique
   nome    String
   senha   String
-  deleted Boolean @default(false)
 }
 
 model Paciente {
@@ -34,9 +30,7 @@ model Paciente {
   medicacoesContinuas String?
   historicoMedico     String?
   historicoFamiliar   String?
-  upload              Upload?  @relation(fields: [uploadId], references: [id])
-  uploadId            Int?
-  deleted             Boolean  @default(false)
+  agendamentos        Agendamento[]
 }
 
 model Medico {
@@ -48,17 +42,17 @@ model Medico {
   especialidade  String
   genero         String
   endereco       String
-  upload         Upload?  @relation(fields: [uploadId], references: [id])
-  uploadId       Int?
-  deleted        Boolean  @default(false)
+  agendamentos   Agendamento[]
 }
 
-model Upload {
-  id        Int        @id @default(autoincrement())
-  nome      String
-  filename  String
-  mimetype  String
-  deleted   Boolean    @default(false)
-  pacientes Paciente[]
-  medicos   Medico[]
+model Agendamento {
+    id Int @id @default(autoincrement())
+    dataHora DateTime
+    observacoes String?
+    status String @default("Agendado")
+    paciente Paciente @relation(fields: [pacienteId], references: [id])
+    pacienteId Int
+    medico Medico @relation(fields: [medicoId], references: [id])
+    medicoId Int
 }
+

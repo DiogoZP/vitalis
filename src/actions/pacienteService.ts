@@ -1,22 +1,40 @@
 'use server';
 import { prisma } from '@/prisma';
 import { PacienteForm } from '@/types/paciente';
-import { uploadFile } from './uploadService';
 
-export async function createPaciente(formData: PacienteForm) {
-    const { upload, ...paciente } = formData;
-    if (upload) {
-        const { id: uploadId } = await uploadFile(upload);
-        return await prisma.paciente.create({
-            data: {
-                ...paciente,
-                uploadId: uploadId,
-            },
-        });
-    }
+export async function createPaciente(data: PacienteForm) {
     return await prisma.paciente.create({
-        data: {
-            ...paciente,
-        },
+        data,
+    });
+}
+
+export async function getPacientes() {
+    return await prisma.paciente.findMany();
+}
+
+export async function getPacienteById(id: number) {
+    return await prisma.paciente.findUnique({
+        where: { id },
+    });
+}
+
+export async function updatePaciente(id: number, data: PacienteForm) {
+    const pacienteExiste = await prisma.paciente.findUnique({
+        where: { id },
+    });
+
+    if (!pacienteExiste) {
+        return null;
+    }
+
+    return await prisma.paciente.update({
+        where: { id },
+        data,
+    });
+}
+
+export async function deletePaciente(id: number) {
+    return await prisma.paciente.delete({
+        where: { id },
     });
 }

@@ -15,11 +15,6 @@ export const pacienteSchema = z.object({
     medicacoesContinuas: z.string(),
     historicoMedico: z.string(),
     historicoFamiliar: z.string(),
-    upload: z
-        .instanceof(File, { message: 'documento de identificação é obrigatório' })
-        .refine((file) => ['image/png', 'image/jpeg', 'image/jpg'].includes(file.type), {
-            message: 'tipo de arquivo inválido',
-        }),
 });
 
 export type PacienteForm = z.infer<typeof pacienteSchema>;
