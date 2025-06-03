@@ -9,6 +9,16 @@ import {
     useReactTable,
     ColumnFiltersState,
 } from '@tanstack/react-table';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import DataTable from '@/components/ui/data-table';
@@ -16,38 +26,62 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useRouter } from 'next/navigation';
-import { Search, Pencil, Trash2, Plus } from 'lucide-react';
+import { Search, Pencil, Trash2, Plus, LoaderCircle, AlertTriangle } from 'lucide-react';
+import { Prisma } from '@prisma/client';
+import useSWR, { mutate } from 'swr';
+import { deleteAgendamento, getAgendamentos } from '@/actions/agendamentoService';
+import { toast } from 'sonner';
 
-type Exam = {
-    id: number;
-    paciente: string;
-    data: string;
-    status: 'Concluído' | 'Agendado' | 'Cancelado';
-    medico: string;
-};
+type Agendamento = Prisma.AgendamentoGetPayload<{
+    include: {
+        paciente: true;
+        medico: true;
+    };
+}>;
 
 export default function Page() {
     const router = useRouter();
-    const columns = React.useMemo<ColumnDef<Exam>[]>(
+    const [agendamento, setAgendamento] = React.useState<Agendamento | null>(null);
+    const [isOpen, setIsOpen] = React.useState(false);
+    const columns = React.useMemo<ColumnDef<Agendamento>[]>(
         () => [
             {
-                accessorKey: 'paciente',
+                accessorKey: 'id',
+                header: 'ID',
+            },
+            {
+                accessorKey: 'paciente.nome',
                 header: 'Paciente',
                 cell: ({ row }) => {
                     const paciente = row.original.paciente;
                     return (
                         <div className="flex items-center gap-3">
                             <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm bg-secondary-background">
-                                {paciente.slice(0, 2)}
+                                {paciente?.nome.slice(0, 2)}
                             </div>
-                            <span>{paciente}</span>
+                            <span>{paciente?.nome}</span>
                         </div>
                     );
                 },
             },
             {
-                accessorKey: 'data',
+                accessorKey: 'dataHora',
                 header: 'Data',
+                cell: ({ row }) => {
+                    const dataHora = new Date(row.original.dataHora);
+                    const options: Intl.DateTimeFormatOptions = {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                    };
+                    return (
+                        <span>
+                            {dataHora.toLocaleDateString('pt-BR', options).replace(',', '')}
+                        </span>
+                    );
+                },
             },
             {
                 accessorKey: 'status',
@@ -79,16 +113,16 @@ export default function Page() {
                 },
             },
             {
-                accessorKey: 'medico',
+                accessorKey: 'medico.nome',
                 header: 'Médico',
                 cell: ({ row }) => {
                     const medico = row.original.medico;
                     return (
                         <div className="flex items-center gap-3">
                             <Avatar className="h-8 w-8">
-                                <AvatarFallback>{medico.slice(0, 2)}</AvatarFallback>
+                                <AvatarFallback>{medico?.nome.slice(0, 2)}</AvatarFallback>
                             </Avatar>
-                            <span>{medico}</span>
+                            <span>{medico?.nome}</span>
                         </div>
                     );
                 },
@@ -97,11 +131,10 @@ export default function Page() {
                 id: 'actions',
                 header: 'Ações',
                 enableSorting: false,
-                cell: () => {
+                cell: ({ row }) => {
                     return (
                         <div className="flex justify-start w-full gap-3">
                             <TooltipProvider>
-                                {' '}
                                 <Tooltip>
                                     <TooltipTrigger asChild>
                                         <Button>
@@ -112,7 +145,13 @@ export default function Page() {
                                 </Tooltip>
                                 <Tooltip>
                                     <TooltipTrigger asChild>
-                                        <Button variant="destructive">
+                                        <Button
+                                            variant="destructive"
+                                            onClick={() => {
+                                                setAgendamento(row.original);
+                                                setIsOpen(true);
+                                            }}
+                                        >
                                             <Trash2 />
                                         </Button>
                                     </TooltipTrigger>
@@ -129,52 +168,13 @@ export default function Page() {
         [],
     );
 
-    const data = React.useMemo<Exam[]>(
-        () => [
-            {
-                id: 1,
-                paciente: 'Pedro Aparecido',
-                data: '10/03/2025 - 13:00',
-                status: 'Concluído',
-                medico: 'Alex Ramos',
-            },
-            {
-                id: 2,
-                paciente: 'João Vitor',
-                data: '15/04/2025 - 09:15',
-                status: 'Agendado',
-                medico: 'Michel Ferraz',
-            },
-            {
-                id: 3,
-                paciente: 'Lucas Gabriel',
-                data: '30/03/2025 - 08:00',
-                status: 'Cancelado',
-                medico: 'Jaqueline Gomes',
-            },
-            {
-                id: 4,
-                paciente: 'Isabela Ferreira',
-                data: '01/01/2025 - 14:30',
-                status: 'Concluído',
-                medico: 'Felipe da Silva',
-            },
-            {
-                id: 5,
-                paciente: 'Nathan Ferreira',
-                data: '01/05/2025 - 15:00',
-                status: 'Agendado',
-                medico: 'Aline Cruz',
-            },
-        ],
-        [],
-    );
+    const { data, error, isLoading } = useSWR<Agendamento[]>('/agendamentos', getAgendamentos);
 
     const [globalFilter, setGlobalFilter] = React.useState<ColumnFiltersState>([]);
     const [sorting, setSorting] = React.useState<SortingState>([]);
 
     const table = useReactTable({
-        data,
+        data: data ?? [],
         columns,
         getCoreRowModel: getCoreRowModel(),
         onSortingChange: setSorting,
@@ -188,8 +188,76 @@ export default function Page() {
             globalFilter,
         },
     });
+
+    if (isLoading) {
+        return (
+            <div className="container mx-auto py-10 px-4 max-w-3xl bg-background min-h-screen">
+                <div className="flex justify-center items-center h-full">
+                    <LoaderCircle className="animate-spin h-8 w-8 text-primary" />
+                </div>
+            </div>
+        );
+    }
+
+    if (error || !data) {
+        return (
+            <div className="container mx-auto py-10 px-4 max-w-3xl bg-background min-h-screen">
+                <div className="flex justify-center items-center h-full">
+                    <AlertTriangle className="h-8 w-8 text-red-500" />
+                    <p className="text-red-500">Erro ao carregar os agendamentos!</p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <>
+            <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Deletar Agendamento</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Tem certeza que deseja deletar este agendamento?
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel asChild>
+                            <Button
+                                variant="outline"
+                                onClick={() => {
+                                    setAgendamento(null);
+                                }}
+                            >
+                                Cancelar
+                            </Button>
+                        </AlertDialogCancel>
+                        <AlertDialogAction asChild>
+                            <Button
+                                onClick={async () => {
+                                    if (!agendamento) return;
+                                    try {
+                                        const res = await deleteAgendamento(agendamento.id);
+                                        if (!res) {
+                                            toast.error('Erro ao deletar agendamento!');
+                                        } else {
+                                            mutate('/agendamentos');
+                                            toast.success('Agendamento deletado com sucesso!');
+                                        }
+                                    } catch {
+                                        toast.error('Erro ao deletar agendamento!');
+                                    }
+                                    setIsOpen(false);
+                                    setAgendamento(null);
+                                }}
+                                variant="destructive"
+                            >
+                                <Trash2 />
+                                Deletar
+                            </Button>
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
             <div className="flex flex-col md:flex-row gap-4 my-2">
                 <div className="w-full">
                     <Input
@@ -201,7 +269,7 @@ export default function Page() {
                     />
                 </div>
                 <div className="flex">
-                    <Button onClick={() => router.push('/agendamentos/criar')}>
+                    <Button className="h-full" onClick={() => router.push('/agendamentos/criar')}>
                         <Plus />
                         <p>Adicionar Agendamento</p>
                     </Button>

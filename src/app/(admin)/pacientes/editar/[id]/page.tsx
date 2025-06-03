@@ -20,22 +20,26 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, ChevronLeft, Plus } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { AlertTriangle, ChevronLeft, LoaderCircle, Save } from 'lucide-react';
 import { PacienteForm, pacienteSchema } from '@/types/paciente';
-import { createPaciente } from '@/actions/pacienteService';
+import { updatePaciente } from '@/actions/pacienteService';
 import { toast } from 'sonner';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { mutate } from 'swr';
+import { getPacienteById } from '@/actions/pacienteService';
+import { useParams } from 'next/navigation';
+import useSWR from 'swr';
+import { DateTimePicker } from '@/components/ui/datetime-picker';
 
-export default function PacienteFormPage() {
+export default function Page() {
+    const { id } = useParams();
+
+    const { data, error, isLoading } = useSWR(['/pacientes', id], ([_url, id]) =>
+        getPacienteById(Number(id)),
+    );
     const router = useRouter();
-
+    console.log(data);
     const [isSubmitting, setSubmitting] = useState<boolean>(false);
 
     const form = useForm<PacienteForm>({
@@ -55,23 +59,51 @@ export default function PacienteFormPage() {
             historicoFamiliar: '',
             genero: '',
         },
+        values: {
+            nome: data?.nome ?? '',
+            email: data?.email ?? '',
+            telefone: data?.telefone ?? '',
+            endereco: data?.endereco ?? '',
+            contatoEmergencia: data?.contatoEmergencia ?? '',
+            telefoneEmergencia: data?.telefoneEmergencia ?? '',
+            planoSaude: data?.planoSaude ?? '',
+            cartaoPlano: data?.cartaoPlano ?? '',
+            alergias: data?.alergias ?? '',
+            medicacoesContinuas: data?.medicacoesContinuas ?? '',
+            historicoMedico: data?.historicoMedico ?? '',
+            historicoFamiliar: data?.historicoFamiliar ?? '',
+            dataNascimento: data?.dataNascimento ? data.dataNascimento : new Date(),
+            genero: data?.genero ?? '',
+        },
     });
 
     async function onSubmit(data: PacienteForm) {
         setSubmitting(true);
         try {
-            const res = await createPaciente(data);
+            const res = await updatePaciente(Number(id), data);
             if (res) {
-                mutate('/pacientes');
-                router.replace('/pacientes');
-                toast.success('Paciente cadastrado com sucesso!');
+                mutate(['/pacientes', id]);
+                toast.success('Paciente atualizado com sucesso!');
             } else {
-                toast.error('Erro ao cadastrar paciente!');
+                toast.error('Erro ao editar paciente!');
             }
         } catch {
-            toast.error('Erro ao criar paciente!');
+            toast.error('Erro ao editar paciente!');
         }
         setSubmitting(false);
+    }
+
+    if (isLoading) {
+        return <LoaderCircle className="animate-spin" />;
+    }
+
+    if (error || !data) {
+        return (
+            <div className="flex w-full h-full items-center justify-center">
+                <AlertTriangle color="red" />
+                <p>Erro ao buscar paciente!</p>
+            </div>
+        );
     }
 
     return (
@@ -115,51 +147,12 @@ export default function PacienteFormPage() {
                                 placeholder="(00) 00000-0000"
                             />
 
-                            <FormField
-                                control={form.control}
+                            <DateTimePicker
                                 name="dataNascimento"
-                                render={({ field }) => (
-                                    <FormItem className="flex flex-col">
-                                        <FormLabel>Data de Nascimento</FormLabel>
-                                        <Popover>
-                                            <PopoverTrigger asChild>
-                                                <FormControl>
-                                                    <Button
-                                                        variant="outline"
-                                                        className={cn(
-                                                            'w-full pl-3 text-left font-normal',
-                                                            !field.value && 'text-muted-foreground',
-                                                        )}
-                                                    >
-                                                        {field.value ? (
-                                                            format(
-                                                                field.value,
-                                                                "dd 'de' MMMM 'de' yyyy",
-                                                                { locale: ptBR },
-                                                            )
-                                                        ) : (
-                                                            <span>Selecione uma data</span>
-                                                        )}
-                                                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                                    </Button>
-                                                </FormControl>
-                                            </PopoverTrigger>
-                                            <PopoverContent className="w-auto p-0" align="start">
-                                                <Calendar
-                                                    mode="single"
-                                                    selected={field.value}
-                                                    onSelect={field.onChange}
-                                                    disabled={(date) =>
-                                                        date > new Date() ||
-                                                        date < new Date('1900-01-01')
-                                                    }
-                                                    initialFocus
-                                                />
-                                            </PopoverContent>
-                                        </Popover>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
+                                control={form.control}
+                                label="Data de Nascimento"
+                                placeholder="Selecione sua data de nascimento"
+                                mode="date"
                             />
 
                             <FormField
@@ -170,7 +163,7 @@ export default function PacienteFormPage() {
                                         <FormLabel>Gênero</FormLabel>
                                         <Select
                                             onValueChange={field.onChange}
-                                            defaultValue={field.value}
+                                            defaultValue={data?.genero}
                                         >
                                             <FormControl>
                                                 <SelectTrigger className="w-full">
@@ -178,8 +171,12 @@ export default function PacienteFormPage() {
                                                 </SelectTrigger>
                                             </FormControl>
                                             <SelectContent>
-                                                <SelectItem value="Masculino">Masculino</SelectItem>
-                                                <SelectItem value="Feminino">Feminino</SelectItem>
+                                                <SelectItem value="masculino">Masculino</SelectItem>
+                                                <SelectItem value="feminino">Feminino</SelectItem>
+                                                <SelectItem value="outro">Outro</SelectItem>
+                                                <SelectItem value="prefiro-nao-informar">
+                                                    Prefiro não informar
+                                                </SelectItem>
                                             </SelectContent>
                                         </Select>
                                         <FormMessage />
@@ -345,8 +342,8 @@ export default function PacienteFormPage() {
                             Voltar
                         </Button>
                         <Button type="submit" disabled={isSubmitting} className="px-6">
-                            <Plus />
-                            {isSubmitting ? 'Enviando...' : 'Cadastrar Paciente'}
+                            <Save />
+                            {isSubmitting ? 'Enviando...' : 'Salvar'}
                         </Button>
                     </div>
                 </form>

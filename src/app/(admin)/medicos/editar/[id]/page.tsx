@@ -1,5 +1,7 @@
 'use client';
-
+import { getMedicoById, updateMedico } from '@/actions/medicoService';
+import { AlertTriangle, LoaderCircle } from 'lucide-react';
+import { useParams } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
@@ -21,13 +23,18 @@ import {
 } from '@/components/ui/select';
 import { useState } from 'react';
 import { MedicoForm, medicoSchema } from '@/types/medico';
-import { createMedico } from '@/actions/medicoService';
 import { toast } from 'sonner';
 import { ChevronLeft, Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { mutate } from 'swr';
+import useSWR, { mutate } from 'swr';
 
 export default function Page() {
+    const { id } = useParams();
+
+    const { data, error, isLoading } = useSWR(['/medicos', id], ([_url, id]) =>
+        getMedicoById(Number(id)),
+    );
+
     const router = useRouter();
     const [isSubmitting, setSubmitting] = useState(false);
 
@@ -41,6 +48,15 @@ export default function Page() {
             especialidade: '',
             genero: '',
             endereco: '',
+        },
+        values: {
+            nome: data?.nome ?? '',
+            email: data?.email ?? '',
+            telefone: data?.telefone ?? '',
+            crm: data?.crm ?? '',
+            especialidade: data?.especialidade ?? '',
+            genero: data?.genero ?? '',
+            endereco: data?.endereco ?? '',
         },
     });
 
@@ -70,16 +86,30 @@ export default function Page() {
     async function onSubmit(data: MedicoForm) {
         setSubmitting(true);
         try {
-            const res = await createMedico(data);
+            const res = await updateMedico(Number(id), data);
             if (res) {
-                mutate('/medicos');
-                router.replace('/medicos');
-                toast.success('Médico cadastrado com sucesso!');
+                mutate(['/medicos', id]);
+                toast.success('Médico atualizado com sucesso!');
+            } else {
+                toast.error('Erro ao atualizar médico!');
             }
         } catch {
-            toast.error('Erro ao criar médico!');
+            toast.error('Erro ao atualizar médico!');
         }
         setSubmitting(false);
+    }
+
+    if (isLoading) {
+        return <LoaderCircle className="animate-spin" />;
+    }
+
+    if (error || !data) {
+        return (
+            <div className="flex w-full h-full items-center justify-center">
+                <AlertTriangle color="red" />
+                <p>Erro ao buscar paciente!</p>
+            </div>
+        );
     }
 
     return (
@@ -131,7 +161,7 @@ export default function Page() {
                                         <FormLabel>Gênero</FormLabel>
                                         <Select
                                             onValueChange={field.onChange}
-                                            defaultValue={field.value}
+                                            defaultValue={data?.genero}
                                         >
                                             <FormControl>
                                                 <SelectTrigger className="w-full">
@@ -139,8 +169,12 @@ export default function Page() {
                                                 </SelectTrigger>
                                             </FormControl>
                                             <SelectContent>
-                                                <SelectItem value="Masculino">Masculino</SelectItem>
-                                                <SelectItem value="Feminino">Feminino</SelectItem>
+                                                <SelectItem value="masculino">Masculino</SelectItem>
+                                                <SelectItem value="feminino">Feminino</SelectItem>
+                                                <SelectItem value="outro">Outro</SelectItem>
+                                                <SelectItem value="prefiro-nao-informar">
+                                                    Prefiro não informar
+                                                </SelectItem>
                                             </SelectContent>
                                         </Select>
                                         <FormMessage />
@@ -176,7 +210,7 @@ export default function Page() {
                                         <FormLabel>Especialidade</FormLabel>
                                         <Select
                                             onValueChange={field.onChange}
-                                            defaultValue={field.value}
+                                            defaultValue={data?.especialidade}
                                         >
                                             <FormControl>
                                                 <SelectTrigger className="w-full">
