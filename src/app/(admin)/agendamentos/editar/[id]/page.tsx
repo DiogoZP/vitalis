@@ -19,17 +19,18 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { useState } from 'react';
-import { createAgendamento } from '@/actions/agendamentoService';
+import { getAgendamentoById, updateAgendamento } from '@/actions/agendamentoService';
 import { toast } from 'sonner';
 import { AgendamentoForm, agendamentoSchema } from '@/types/agendamento';
 import { getPacientes } from '@/actions/pacienteService';
 import useSWR, { mutate } from 'swr';
 import { getMedicos } from '@/actions/medicoService';
-import { AlertTriangle, ChevronLeft, LoaderCircle, Plus } from 'lucide-react';
+import { AlertTriangle, ChevronLeft, LoaderCircle, Save } from 'lucide-react';
 import { DateTimePicker } from '@/components/ui/datetime-picker';
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 
 export default function Page() {
+    const { id } = useParams();
     const router = useRouter();
 
     const [isSubmitting, setSubmitting] = useState(false);
@@ -38,38 +39,54 @@ export default function Page() {
         error: pacienteError,
         isLoading: pacienteLoading,
     } = useSWR('/pacientes', getPacientes);
+
     const {
         data: medicos,
         error: medicoError,
         isLoading: medicoLoading,
     } = useSWR('/medicos', getMedicos);
 
+    const {
+        data: agendamento,
+        error: agendamentoError,
+        isLoading: agendamentoLoading,
+    } = useSWR(['/agendamentos', id], ([_url, id]) => getAgendamentoById(Number(id)));
+
     const form = useForm<AgendamentoForm>({
         resolver: zodResolver(agendamentoSchema),
         defaultValues: {
             observacoes: '',
-            status: 'Agendado',
+            status: '',
+            dataHora: undefined,
+            pacienteId: undefined,
+            medicoId: undefined,
+        },
+        values: {
+            observacoes: agendamento?.observacoes ?? '',
+            status: agendamento?.status ?? '',
+            dataHora: agendamento?.dataHora ? new Date(agendamento.dataHora) : new Date(),
+            pacienteId: agendamento?.pacienteId ?? 0,
+            medicoId: agendamento?.medicoId ?? 0,
         },
     });
 
     async function onSubmit(data: AgendamentoForm) {
         setSubmitting(true);
         try {
-            const res = await createAgendamento(data);
+            const res = await updateAgendamento(Number(id), data);
             if (res) {
                 mutate('/agendamentos');
-                router.replace('/agendamentos');
-                toast.success('Agendamento cadastrado com sucesso!');
+                toast.success('Agendamento atualizado com sucesso!');
             } else {
-                toast.error('Erro ao criar agendamento!');
+                toast.error('Erro ao atualizar agendamento!');
             }
         } catch {
-            toast.error('Erro ao criar agendamento!');
+            toast.error('Erro ao atualizar agendamento!');
         }
         setSubmitting(false);
     }
 
-    if (pacienteLoading || medicoLoading) {
+    if (pacienteLoading || medicoLoading || agendamentoLoading) {
         return (
             <div className="container mx-auto py-10 px-4 max-w-3xl bg-background min-h-screen">
                 <div className="flex justify-center items-center h-full">
@@ -79,7 +96,14 @@ export default function Page() {
         );
     }
 
-    if (pacienteError || medicoError || !pacientes || !medicos) {
+    if (
+        pacienteError ||
+        medicoError ||
+        agendamentoError ||
+        !pacientes ||
+        !medicos ||
+        !agendamento
+    ) {
         return (
             <div className="container mx-auto py-10 px-4 max-w-3xl bg-background min-h-screen">
                 <div className="text-red-500 text-center">
@@ -124,6 +148,7 @@ export default function Page() {
                                         <FormLabel>Paciente</FormLabel>
                                         <Select
                                             onValueChange={(value) => field.onChange(Number(value))}
+                                            defaultValue={agendamento?.pacienteId?.toString()}
                                         >
                                             <FormControl>
                                                 <SelectTrigger className="w-full">
@@ -159,6 +184,7 @@ export default function Page() {
                                         <FormLabel>Médico</FormLabel>
                                         <Select
                                             onValueChange={(value) => field.onChange(Number(value))}
+                                            defaultValue={agendamento?.medicoId?.toString()}
                                         >
                                             <FormControl>
                                                 <SelectTrigger className="w-full">
@@ -219,8 +245,8 @@ export default function Page() {
                             Voltar
                         </Button>
                         <Button type="submit" disabled={isSubmitting} className="px-6">
-                            <Plus />
-                            {isSubmitting ? 'Criando...' : 'Criar Agendamento'}
+                            <Save />
+                            {isSubmitting ? 'Criando...' : 'Salvar'}
                         </Button>
                     </div>
                 </form>

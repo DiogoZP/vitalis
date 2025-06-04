@@ -6,7 +6,7 @@ export const agendamentoSchema = z.object({
         z.date({ required_error: 'Data e hora são obrigatórias' }),
     ),
     observacoes: z.string().optional(),
-    status: z.enum(['Agendado', 'Confirmado', 'Cancelado', 'Realizado']),
+    status: z.string({ required_error: 'Status é obrigatório' }),
     pacienteId: z.number({ required_error: 'Paciente é obrigatório' }),
     medicoId: z.number({ required_error: 'Médico é obrigatório' }),
 });

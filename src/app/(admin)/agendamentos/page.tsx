@@ -137,7 +137,13 @@ export default function Page() {
                             <TooltipProvider>
                                 <Tooltip>
                                     <TooltipTrigger asChild>
-                                        <Button>
+                                        <Button
+                                            onClick={() =>
+                                                router.push(
+                                                    `/agendamentos/editar/${row.original.id}`,
+                                                )
+                                            }
+                                        >
                                             <Pencil />
                                         </Button>
                                     </TooltipTrigger>
@@ -165,7 +171,7 @@ export default function Page() {
                 },
             },
         ],
-        [],
+        [router],
     );
 
     const { data, error, isLoading } = useSWR<Agendamento[]>('/agendamentos', getAgendamentos);

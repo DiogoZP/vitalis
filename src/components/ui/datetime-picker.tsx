@@ -149,7 +149,16 @@ export function DateTimePicker<T extends FieldValues>({
                                 <Calendar
                                     mode="single"
                                     selected={field.value}
-                                    onSelect={field.onChange}
+                                    onSelect={(date) => {
+                                        if (date) {
+                                            const newDate = new Date(date);
+                                            if (mode === 'dateTime' && field.value) {
+                                                newDate.setHours(field.value.getHours());
+                                                newDate.setMinutes(field.value.getMinutes());
+                                            }
+                                            field.onChange(newDate);
+                                        }
+                                    }}
                                     initialFocus
                                     month={field.value}
                                     locale={ptBR}

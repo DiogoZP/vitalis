@@ -1,6 +1,6 @@
 'use client';
 import { getMedicoById, updateMedico } from '@/actions/medicoService';
-import { AlertTriangle, LoaderCircle } from 'lucide-react';
+import { AlertTriangle, LoaderCircle, Save } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -24,7 +24,7 @@ import {
 import { useState } from 'react';
 import { MedicoForm, medicoSchema } from '@/types/medico';
 import { toast } from 'sonner';
-import { ChevronLeft, Plus } from 'lucide-react';
+import { ChevronLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import useSWR, { mutate } from 'swr';
 
@@ -252,8 +252,8 @@ export default function Page() {
                             Voltar
                         </Button>
                         <Button type="submit" disabled={isSubmitting} className="px-6">
-                            <Plus />
-                            {isSubmitting ? 'Enviando...' : 'Cadastrar Médico'}
+                            <Save />
+                            {isSubmitting ? 'Enviando...' : 'Salvar'}
                         </Button>
                     </div>
                 </form>
