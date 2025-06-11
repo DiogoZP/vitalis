@@ -11,12 +11,20 @@ import {
 import { flexRender, Table as TableType } from '@tanstack/react-table';
 import { ColumnHeader } from './column-header';
 import { TablePagination } from './table-pagination';
+import { useRouter } from 'next/navigation';
 
-interface DataTableProps<TData> {
-    table: TableType<TData>;
+interface RowWithId {
+    id: string | number;
 }
 
-export default function DataTable<TData>({ table }: DataTableProps<TData>) {
+interface DataTableProps<TData extends RowWithId> {
+    table: TableType<TData>;
+    name: string;
+}
+
+export default function DataTable<TData extends RowWithId>({ table, name }: DataTableProps<TData>) {
+    const router = useRouter();
+
     return (
         <div className="bg-[#131619] rounded-xl overflow-hidden">
             <Table>
@@ -49,10 +57,15 @@ export default function DataTable<TData>({ table }: DataTableProps<TData>) {
                                 {row.getVisibleCells().map((cell) => (
                                     <TableCell
                                         key={cell.id}
+                                        onClick={() => {
+                                            if (cell.column.id === 'actions') {
+                                                return;
+                                            } else {
+                                                router.push(`/${name}/${cell.row.original.id}`);
+                                            }
+                                        }}
                                         className={`py-4 px-6 ${
-                                            cell.column.id === 'actions'
-                                                ? 'text-right'
-                                                : 'text-left'
+                                            cell.column.id === 'actions' ? '' : 'cursor-pointer'
                                         }`}
                                     >
                                         {flexRender(cell.column.columnDef.cell, cell.getContext())}

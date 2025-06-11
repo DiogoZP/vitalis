@@ -66,7 +66,7 @@ export function NavUser({ usuario }: { usuario: User }) {
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={logout}>
                             <LogOut />
-                            Log out
+                            Sair
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>

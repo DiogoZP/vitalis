@@ -1,5 +1,4 @@
 'use client';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import {
@@ -18,14 +17,12 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { useState } from 'react';
-import { getAgendamentoById, updateAgendamento } from '@/actions/agendamentoService';
-import { toast } from 'sonner';
-import { AgendamentoForm, agendamentoSchema } from '@/types/agendamento';
+import { getAgendamentoById } from '@/actions/agendamentoService';
+import { AgendamentoForm } from '@/types/agendamento';
 import { getPacientes } from '@/actions/pacienteService';
-import useSWR, { mutate } from 'swr';
+import useSWR from 'swr';
 import { getMedicos } from '@/actions/medicoService';
-import { AlertTriangle, ChevronLeft, LoaderCircle, Save } from 'lucide-react';
+import { AlertTriangle, ChevronLeft, LoaderCircle, Pencil } from 'lucide-react';
 import { DateTimePicker } from '@/components/ui/datetime-picker';
 import { useParams, useRouter } from 'next/navigation';
 
@@ -33,7 +30,6 @@ export default function Page() {
     const { id } = useParams();
     const router = useRouter();
 
-    const [isSubmitting, setSubmitting] = useState(false);
     const {
         data: pacientes,
         error: pacienteError,
@@ -53,7 +49,7 @@ export default function Page() {
     } = useSWR(['/agendamentos', id], ([_url, id]) => getAgendamentoById(Number(id)));
 
     const form = useForm<AgendamentoForm>({
-        resolver: zodResolver(agendamentoSchema),
+        disabled: true,
         defaultValues: {
             observacoes: '',
             status: '',
@@ -69,22 +65,6 @@ export default function Page() {
             medicoId: agendamento?.medicoId ?? 0,
         },
     });
-
-    async function onSubmit(data: AgendamentoForm) {
-        setSubmitting(true);
-        try {
-            const res = await updateAgendamento(Number(id), data);
-            if (res) {
-                mutate('/agendamentos');
-                toast.success('Agendamento atualizado com sucesso!');
-            } else {
-                toast.error('Erro ao atualizar agendamento!');
-            }
-        } catch {
-            toast.error('Erro ao atualizar agendamento!');
-        }
-        setSubmitting(false);
-    }
 
     const getStatusColor = (value: string) => {
         switch (value) {
@@ -130,11 +110,11 @@ export default function Page() {
     return (
         <div className="container bg-background h-screen">
             <div className="flex justify-between items-center mb-6">
-                <h1 className="text-2xl font-bold text-foreground">Editar Agendamento</h1>
+                <h1 className="text-2xl font-bold text-foreground">Visualizar Agendamento</h1>
             </div>
 
             <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                <form className="space-y-8">
                     {/* Informações do Agendamento */}
                     <div className="bg-card rounded-lg shadow-sm border border-border p-6">
                         <div className="md:col-span-2">
@@ -147,6 +127,7 @@ export default function Page() {
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <DateTimePicker
+                                disabled
                                 mode="dateTime"
                                 name="dataHora"
                                 control={form.control}
@@ -159,6 +140,7 @@ export default function Page() {
                                     <FormItem className="flex flex-col w-full">
                                         <FormLabel>Status</FormLabel>
                                         <Select
+                                            disabled
                                             onValueChange={field.onChange}
                                             defaultValue={agendamento?.status}
                                         >
@@ -236,6 +218,7 @@ export default function Page() {
                                     <FormItem className="flex flex-col w-full">
                                         <FormLabel>Paciente</FormLabel>
                                         <Select
+                                            disabled
                                             onValueChange={(value) => field.onChange(Number(value))}
                                             defaultValue={agendamento?.pacienteId?.toString()}
                                         >
@@ -272,6 +255,7 @@ export default function Page() {
                                     <FormItem className="flex flex-col w-full">
                                         <FormLabel>Médico</FormLabel>
                                         <Select
+                                            disabled
                                             onValueChange={(value) => field.onChange(Number(value))}
                                             defaultValue={agendamento?.medicoId?.toString()}
                                         >
@@ -323,18 +307,18 @@ export default function Page() {
                     </div>
 
                     <div className="flex justify-between pb-5">
-                        <Button
-                            disabled={isSubmitting}
-                            variant="outline"
-                            className="px-6"
-                            onClick={() => router.back()}
-                        >
+                        <Button variant="outline" className="px-6" onClick={() => router.back()}>
                             <ChevronLeft />
                             Voltar
                         </Button>
-                        <Button type="submit" disabled={isSubmitting} className="px-6">
-                            <Save />
-                            {isSubmitting ? 'Criando...' : 'Salvar'}
+                        <Button
+                            className="px-6"
+                            onClick={() => {
+                                router.push(`/agendamentos/editar/${id}`);
+                            }}
+                        >
+                            <Pencil />
+                            Editar
                         </Button>
                     </div>
                 </form>

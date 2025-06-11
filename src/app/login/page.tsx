@@ -1,4 +1,4 @@
-import LoginForm from '@/components/login-form';
+import FormLogin from '@/components/login-form';
 import Image from 'next/image';
 
 export default function Home() {
@@ -13,7 +13,7 @@ export default function Home() {
                         alt="logo"
                         className="mb-12 h-10 w-fit"
                     />
-                    <LoginForm />
+                    <FormLogin />
                     <div className="text-14-regular mt-20 flex justify-between">
                         <p className="justify-items-end text-dark-600">© 2025 Vitalis</p>
                     </div>

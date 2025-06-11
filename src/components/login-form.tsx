@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
 import { Form } from '@/components/ui/form';
 import { login } from '@/actions/authService';
-import { UsuarioForm, usuarioSchema } from '@/types/usuario';
+import { LoginForm, loginSchema } from '@/types/login';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -18,18 +18,18 @@ import { useState } from 'react';
 import FormInput from './ui/form-input';
 import { TbMail } from 'react-icons/tb';
 
-export default function LoginForm() {
+export default function FormLogin() {
     const [opened, setOpen] = useState(false);
 
-    const form = useForm<UsuarioForm>({
-        resolver: zodResolver(usuarioSchema),
+    const form = useForm<LoginForm>({
+        resolver: zodResolver(loginSchema),
         defaultValues: {
             email: '',
             senha: '',
         },
     });
 
-    async function onSubmit(data: UsuarioForm) {
+    async function onSubmit(data: LoginForm) {
         const res = await login(data);
         if (res?.error) {
             setOpen(true);
@@ -59,13 +59,19 @@ export default function LoginForm() {
 
                 <FormInput
                     name="email"
-                    placeholder='a@email.com'
+                    placeholder="a@email.com"
                     type="email"
                     label="Email:"
                     control={form.control}
                     Icon={TbMail}
                 />
-                <FormInput name="senha" placeholder='*****' type="password" label="Senha:" control={form.control} />
+                <FormInput
+                    name="senha"
+                    placeholder="*****"
+                    type="password"
+                    label="Senha:"
+                    control={form.control}
+                />
 
                 <Button type="submit" variant="default">
                     Entrar

@@ -1,8 +1,7 @@
 'use client';
-import { getMedicoById, updateMedico } from '@/actions/medicoService';
-import { AlertTriangle, LoaderCircle, Save } from 'lucide-react';
+import { getMedicoById } from '@/actions/medicoService';
+import { AlertTriangle, LoaderCircle, Pencil } from 'lucide-react';
 import { useParams } from 'next/navigation';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import {
@@ -21,12 +20,10 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { useState } from 'react';
-import { MedicoForm, medicoSchema } from '@/types/medico';
-import { toast } from 'sonner';
+import { MedicoForm } from '@/types/medico';
 import { ChevronLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import useSWR, { mutate } from 'swr';
+import useSWR from 'swr';
 
 export default function Page() {
     const { id } = useParams();
@@ -36,10 +33,9 @@ export default function Page() {
     );
 
     const router = useRouter();
-    const [isSubmitting, setSubmitting] = useState(false);
 
     const form = useForm<MedicoForm>({
-        resolver: zodResolver(medicoSchema),
+        disabled: true,
         defaultValues: {
             nome: '',
             email: '',
@@ -83,22 +79,6 @@ export default function Page() {
         'Medicina Esportiva',
     ];
 
-    async function onSubmit(data: MedicoForm) {
-        setSubmitting(true);
-        try {
-            const res = await updateMedico(Number(id), data);
-            if (res) {
-                mutate(['/medicos', id]);
-                toast.success('Médico atualizado com sucesso!');
-            } else {
-                toast.error('Erro ao atualizar médico!');
-            }
-        } catch {
-            toast.error('Erro ao atualizar médico!');
-        }
-        setSubmitting(false);
-    }
-
     if (isLoading) {
         return <LoaderCircle className="animate-spin" />;
     }
@@ -119,7 +99,7 @@ export default function Page() {
             </div>
 
             <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                <form className="space-y-8">
                     {/* Informações Pessoais */}
                     <div className="bg-card rounded-lg shadow-sm border border-border p-6">
                         <div className="md:col-span-2">
@@ -162,6 +142,7 @@ export default function Page() {
                                         <Select
                                             onValueChange={field.onChange}
                                             defaultValue={data?.genero}
+                                            disabled
                                         >
                                             <FormControl>
                                                 <SelectTrigger className="w-full">
@@ -211,6 +192,7 @@ export default function Page() {
                                         <Select
                                             onValueChange={field.onChange}
                                             defaultValue={data?.especialidade}
+                                            disabled
                                         >
                                             <FormControl>
                                                 <SelectTrigger className="w-full">
@@ -242,18 +224,13 @@ export default function Page() {
                     </div>
 
                     <div className="flex justify-between pb-5">
-                        <Button
-                            disabled={isSubmitting}
-                            variant="outline"
-                            className="px-6"
-                            onClick={() => router.back()}
-                        >
+                        <Button variant="outline" className="px-6" onClick={() => router.back()}>
                             <ChevronLeft />
                             Voltar
                         </Button>
-                        <Button type="submit" disabled={isSubmitting} className="px-6">
-                            <Save />
-                            {isSubmitting ? 'Enviando...' : 'Salvar'}
+                        <Button className="px-6" onClick={() => router.push(`/medicos/editar/${id}`)}>
+                            <Pencil />
+                            Editar
                         </Button>
                     </div>
                 </form>

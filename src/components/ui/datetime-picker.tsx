@@ -34,6 +34,7 @@ export function DateTimePicker<T extends FieldValues>({
     label,
     name,
     description,
+    disabled,
     mode = 'dateTime',
 }: DateTimePickerProps<T>) {
     return (
@@ -48,6 +49,7 @@ export function DateTimePicker<T extends FieldValues>({
                             <FormControl>
                                 <Button
                                     variant={'outline'}
+                                    disabled={disabled}
                                     className={cn(
                                         'w-full pl-3 text-left font-normal',
                                         !field.value && 'text-muted-foreground',

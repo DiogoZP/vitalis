@@ -1,6 +1,4 @@
 'use client';
-
-import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import {
@@ -20,13 +18,9 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { AlertTriangle, ChevronLeft, LoaderCircle, Save } from 'lucide-react';
-import { PacienteForm, pacienteSchema } from '@/types/paciente';
-import { updatePaciente } from '@/actions/pacienteService';
-import { toast } from 'sonner';
-import { useState } from 'react';
+import { AlertTriangle, ChevronLeft, LoaderCircle, Pencil } from 'lucide-react';
+import { PacienteForm } from '@/types/paciente';
 import { useRouter } from 'next/navigation';
-import { mutate } from 'swr';
 import { getPacienteById } from '@/actions/pacienteService';
 import { useParams } from 'next/navigation';
 import useSWR from 'swr';
@@ -39,10 +33,9 @@ export default function Page() {
         getPacienteById(Number(id)),
     );
     const router = useRouter();
-    const [isSubmitting, setSubmitting] = useState<boolean>(false);
 
     const form = useForm<PacienteForm>({
-        resolver: zodResolver(pacienteSchema),
+        disabled: true,
         defaultValues: {
             nome: '',
             email: '',
@@ -76,22 +69,6 @@ export default function Page() {
         },
     });
 
-    async function onSubmit(data: PacienteForm) {
-        setSubmitting(true);
-        try {
-            const res = await updatePaciente(Number(id), data);
-            if (res) {
-                mutate(['/pacientes', id]);
-                toast.success('Paciente atualizado com sucesso!');
-            } else {
-                toast.error('Erro ao editar paciente!');
-            }
-        } catch {
-            toast.error('Erro ao editar paciente!');
-        }
-        setSubmitting(false);
-    }
-
     if (isLoading) {
         return <LoaderCircle className="animate-spin" />;
     }
@@ -108,11 +85,11 @@ export default function Page() {
     return (
         <div className="container bg-background h-screen">
             <div className="flex justify-between items-center mb-6">
-                <h1 className="text-2xl font-bold text-foreground">Editar Paciente</h1>
+                <h1 className="text-2xl font-bold text-foreground">Visualizar Paciente</h1>
             </div>
 
             <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                <form className="space-y-8">
                     {/* Informações Pessoais */}
                     <div className="bg-card rounded-lg shadow-sm border border-border p-6">
                         <div className="md:col-span-2">
@@ -149,6 +126,7 @@ export default function Page() {
                             <DateTimePicker
                                 name="dataNascimento"
                                 control={form.control}
+                                disabled
                                 label="Data de Nascimento"
                                 placeholder="Selecione sua data de nascimento"
                                 mode="date"
@@ -163,6 +141,7 @@ export default function Page() {
                                         <Select
                                             onValueChange={field.onChange}
                                             defaultValue={data?.genero}
+                                            disabled
                                         >
                                             <FormControl>
                                                 <SelectTrigger className="w-full">
@@ -331,18 +310,16 @@ export default function Page() {
                         </div>
                     </div>
                     <div className="flex justify-between pb-5">
-                        <Button
-                            disabled={isSubmitting}
-                            variant="outline"
-                            className="px-6"
-                            onClick={() => router.back()}
-                        >
+                        <Button variant="outline" className="px-6" onClick={() => router.back()}>
                             <ChevronLeft />
                             Voltar
                         </Button>
-                        <Button type="submit" disabled={isSubmitting} className="px-6">
-                            <Save />
-                            {isSubmitting ? 'Enviando...' : 'Salvar'}
+                        <Button
+                            className="px-6"
+                            onClick={() => router.push(`/pacientes/editar/${id}`)}
+                        >
+                            <Pencil />
+                            Editar
                         </Button>
                     </div>
                 </form>

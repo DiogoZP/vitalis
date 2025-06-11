@@ -1,5 +1,4 @@
 'use client';
-
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
@@ -33,7 +32,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { mutate } from 'swr';
 
-export default function PacienteFormPage() {
+export default function Page() {
     const router = useRouter();
 
     const [isSubmitting, setSubmitting] = useState<boolean>(false);
