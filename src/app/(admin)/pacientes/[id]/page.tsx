@@ -128,7 +128,7 @@ export default function Page() {
                                 control={form.control}
                                 disabled
                                 label="Data de Nascimento"
-                                placeholder="Selecione sua data de nascimento"
+                                placeholder="Selecione a data de nascimento"
                                 mode="date"
                             />
 

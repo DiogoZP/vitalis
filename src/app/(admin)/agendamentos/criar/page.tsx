@@ -114,6 +114,7 @@ export default function Page() {
                                 name="dataHora"
                                 control={form.control}
                                 label="Data e Hora"
+                                placeholder="Selecione a data e hora do agendamento"
                             />
 
                             <FormField

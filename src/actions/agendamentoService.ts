@@ -12,7 +12,6 @@ export async function getAgendamentos() {
             paciente: true,
             medico: true,
         },
-        orderBy: { dataHora: 'asc' },
     });
 }
 

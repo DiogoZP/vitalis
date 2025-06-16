@@ -34,6 +34,7 @@ export function DateTimePicker<T extends FieldValues>({
     label,
     name,
     description,
+    placeholder,
     disabled,
     mode = 'dateTime',
 }: DateTimePickerProps<T>) {
@@ -62,7 +63,7 @@ export function DateTimePicker<T extends FieldValues>({
                                             format(field.value, 'dd/MM/yyyy')
                                         )
                                     ) : (
-                                        <span>Selecione um horário</span>
+                                        <span>{placeholder}</span>
                                     )}
                                     <Calendar1 className="ml-auto h-4 w-4" />
                                 </Button>
