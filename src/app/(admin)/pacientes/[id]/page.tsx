@@ -149,12 +149,8 @@ export default function Page() {
                                                 </SelectTrigger>
                                             </FormControl>
                                             <SelectContent>
-                                                <SelectItem value="masculino">Masculino</SelectItem>
-                                                <SelectItem value="feminino">Feminino</SelectItem>
-                                                <SelectItem value="outro">Outro</SelectItem>
-                                                <SelectItem value="prefiro-nao-informar">
-                                                    Prefiro não informar
-                                                </SelectItem>
+                                                <SelectItem value="Masculino">Masculino</SelectItem>
+                                                <SelectItem value="Feminino">Feminino</SelectItem>
                                             </SelectContent>
                                         </Select>
                                         <FormMessage />
