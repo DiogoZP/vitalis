@@ -60,29 +60,6 @@ export default function Page() {
         },
     });
 
-    const especialidades = [
-        'Cardiologia',
-        'Dermatologia',
-        'Endocrinologia',
-        'Gastroenterologia',
-        'Ginecologia',
-        'Neurologia',
-        'Oftalmologia',
-        'Ortopedia',
-        'Otorrinolaringologia',
-        'Pediatria',
-        'Pneumologia',
-        'Psiquiatria',
-        'Radiologia',
-        'Urologia',
-        'Clínica Geral',
-        'Medicina de Família',
-        'Anestesiologia',
-        'Cirurgia Geral',
-        'Medicina do Trabalho',
-        'Medicina Esportiva',
-    ];
-
     async function onSubmit(data: MedicoForm) {
         setSubmitting(true);
         try {
@@ -202,35 +179,11 @@ export default function Page() {
                                 placeholder="Ex: CRM/SP 123456"
                             />
 
-                            <FormField
+                            <FormInput
                                 control={form.control}
                                 name="especialidade"
-                                render={({ field }) => (
-                                    <FormItem className="flex flex-col w-full">
-                                        <FormLabel>Especialidade</FormLabel>
-                                        <Select
-                                            onValueChange={field.onChange}
-                                            defaultValue={data?.especialidade}
-                                        >
-                                            <FormControl>
-                                                <SelectTrigger className="w-full">
-                                                    <SelectValue placeholder="Selecione uma especialidade" />
-                                                </SelectTrigger>
-                                            </FormControl>
-                                            <SelectContent className="max-h-60">
-                                                {especialidades.map((especialidade) => (
-                                                    <SelectItem
-                                                        key={especialidade}
-                                                        value={especialidade}
-                                                    >
-                                                        {especialidade}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
+                                label="Especialidade"
+                                placeholder="Ex: Cardiologista"
                             />
                             <FormInput
                                 control={form.control}
