@@ -213,7 +213,7 @@ export default function Page() {
                     </Button>
                 </div>
             </div>
-            <DataTable table={table} name='pacientes' />
+            <DataTable table={table} name="pacientes" />
         </>
     );
 }
